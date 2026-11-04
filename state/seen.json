@@ -81,6 +81,14 @@
       "source": "米游社搜索(礼包码)",
       "url": "https://www.miyoushe.com/ys/article/78609594"
     },
+    "CDOF4X83H7X2": {
+      "first_seen": 1793792037,
+      "game": "原神",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
     "CREATIONNYMPH": {
       "first_seen": 1789367651,
       "game": "崩坏：星穹铁道",
@@ -225,6 +233,14 @@
       "source": "米游社搜索(兑换码)",
       "url": "https://www.miyoushe.com/ys/article/78578708"
     },
+    "KEEPUPWITHMITYA": {
+      "first_seen": 1793792037,
+      "game": "原神",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
     "KXHN8W7FGB6U": {
       "first_seen": 1789930823,
       "game": "崩坏：星穹铁道",
@@ -252,6 +268,14 @@
     "MALSV2F247FP": {
       "first_seen": 1789906335,
       "game": "崩坏：星穹铁道",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
+    "MIJIQ23V2437": {
+      "first_seen": 1793792037,
+      "game": "原神",
       "region": "国际服",
       "score": 10,
       "source": "hoyo-codes(国际服)",
@@ -530,7 +554,7 @@
       "url": "https://hoyo-codes.seria.moe"
     }
   },
-  "last_heartbeat": 1793699781,
+  "last_heartbeat": 1793791675,
   "sign_reminders": {
     "3jbyw7p8": "2026-10-30",
     "riuf6rc3": "2026-09-18",
