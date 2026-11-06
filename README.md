@@ -1,3 +1,9 @@
+> **转载声明**
+>
+> 本仓库并非原创。功能代码全部来自 [littleyellowbicycle/mihoyo-code-watch](https://github.com/littleyellowbicycle/mihoyo-code-watch)，版权归原作者 **littleyellowbicycle** 所有。
+>
+> 此处仅为个人自用的部署副本：代码未作功能修改，提交历史完整保留自上游，仅按原仓库说明完成 GitHub Actions 定时任务的配置。使用或二次开发请以原仓库为准，上游 README 中的注意事项（包括不建议 fork 等）同样适用。
+
 # 米家兑换码哨兵 · mihoyo-code-watch
 
 盯着米游社、社区和 TapTap 活动中心里的**新兑换码 / 新福利活动**，一发现就推到你微信。
