@@ -34,17 +34,9 @@ def _local_parts(now, offset_hours):
     return time.strftime("%Y-%m-%d", shifted), shifted.tm_hour * 60 + shifted.tm_min
 
 
-def pending_slot(cfg, now, state):
-    """当前是否处于可推送时段？返回 (本地日期, 时段) / None。
-
-    固定推送时间就是为了躲开凌晨 —— 不在时段内时不推送、也不记录状态，
-    所以夜里发现的内容不会丢，会一直攒到下一个时段一起发。
-    关掉 push_schedule.enable 就退回「有变化立刻推」。
-    """
+def _slot_window(cfg, now):
+    """返回 (本地日期, 当前所处时段标签)；不在任何时段内时时段为 None。"""
     schedule = cfg.get("push_schedule") or {}
-    if not schedule.get("enable", True):
-        return "", "always"
-
     offset = int(schedule.get("tz_offset", 8))
     window = int(schedule.get("window_minutes", 60))
     date, minutes = _local_parts(now, offset)
@@ -55,12 +47,44 @@ def pending_slot(cfg, now, state):
             start = int(hh) * 60 + int(mm)
         except (ValueError, AttributeError):
             continue
-        if not (start <= minutes < start + window):
-            continue
-        if state_mod.push_slot_pushed(state, date, slot):
-            continue
-        return date, str(slot)
-    return None
+        if start <= minutes < start + window:
+            return date, str(slot)
+    return date, None
+
+
+def pending_slot(cfg, now, state):
+    """当前是否处于可推送时段？返回 (本地日期, 时段) / None。
+
+    固定推送时间就是为了躲开凌晨 —— 不在时段内时不推送、也不记录状态，
+    所以夜里发现的内容不会丢，会一直攒到下一个时段一起发。
+    关掉 push_schedule.enable 就退回「有变化立刻推」。
+    """
+    if not (cfg.get("push_schedule") or {}).get("enable", True):
+        return "", "always"
+
+    date, slot = _slot_window(cfg, now)
+    if slot is None or state_mod.push_slot_pushed(state, date, slot):
+        return None
+    return date, slot
+
+
+def slot_status(cfg, now, slot):
+    """把时段状态压成一行日志。
+
+    每轮都打印是刻意的：没有新内容时不会走推送分支，光看「有没有推送」
+    无法判断闸门是否生效，有这行就能直接确认。
+    """
+    schedule = cfg.get("push_schedule") or {}
+    if not schedule.get("enable", True):
+        return "已关闭（有变化立刻推）"
+
+    slots = "、".join(str(s) for s in (schedule.get("slots") or []))
+    _, current = _slot_window(cfg, now)
+    if current is None:
+        return f"非推送时段（只在 {slots} 推），本轮不推送"
+    if slot is None:
+        return f"{current} 时段今天已推送过，本轮不重复推送"
+    return f"{current} 时段，本轮可推送"
 
 
 def filter_excluded(posts, cfg):
@@ -197,11 +221,14 @@ def main(argv=None):
     state, first_run = state_mod.load(state_path)
     log.info("记录中已有 %d 个历史兑换码", len(state["codes"]))
 
+    tz_offset = int((cfg.get("push_schedule") or {}).get("tz_offset", 8))
+    today, _ = _local_parts(now, tz_offset)
+    slot = pending_slot(cfg, now, state)
+    log.info("推送时段：%s", slot_status(cfg, now, slot))
+
     posts = filter_excluded(collect(cfg, now), cfg)
     log.info("共取得 %d 条待分析内容", len(posts))
 
-    tz_offset = int((cfg.get("push_schedule") or {}).get("tz_offset", 8))
-    today, _ = _local_parts(now, tz_offset)
     novel = analyse(cfg, posts, dict(state["codes"]))
     daily_reminder = bool(cfg.get("taptap.daily_reminder", True))
     announced = collect_announce(posts, state)
@@ -240,7 +267,6 @@ def main(argv=None):
 
         title = _title(novel, announced, reminders)
         body = _render(novel, announced, reminders)
-        slot = pending_slot(cfg, now, state)
         if args.dry_run:
             log.info("dry-run：跳过推送。内容预览：\n%s", body)
         elif slot is None:
