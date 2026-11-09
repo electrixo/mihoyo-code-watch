@@ -54,7 +54,10 @@ class MiyousheSearch(Source):
         for keyword in self.keywords:
             url = f"{SEARCH_API}?keyword={quote(keyword)}&page_size={self.page_size}"
             try:
-                data = get_json(url, headers=HEADERS, timeout=20)
+                # timeout/retries 刻意收紧：米游社偶发 SSL 握手超时，
+                # 默认 20 秒 × 3 轮 × 2 种 SSL 上下文 = 单关键词最坏 120 秒，
+                # 5 个关键词足以吃满 Actions 的 10 分钟上限。
+                data = get_json(url, headers=HEADERS, timeout=10, retries=2)
             except HttpError as exc:
                 log.warning("关键词 %r 抓取失败：%s", keyword, exc)
                 continue
