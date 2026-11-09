@@ -2,7 +2,14 @@
   "_说明": "复制成 config.json 再改。带 token 的字段建议走环境变量（GitHub Secrets 里配同名变量即可，会覆盖这里的值）。",
   "_环境变量": "PUSHPLUS_TOKEN / SERVERCHAN_SENDKEY / WECOM_WEBHOOK / BARK_URL / TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID / WEIBO_COOKIE / TAPTAP_COOKIE / NOTIFY_CHANNEL",
 
-  "games": ["原神", "崩坏：星穹铁道", "绝区零"],
+  "exclude_games": ["崩坏3", "未定事件簿", "崩坏学园2"],
+
+  "push_schedule": {
+    "enable": true,
+    "tz_offset": 8,
+    "slots": ["09:00", "20:00"],
+    "window_minutes": 60
+  },
 
   "miyoushe": {
     "enable": true,
@@ -26,10 +33,7 @@
     "apps": {
       "原神": 168332,
       "崩坏：星穹铁道": 224267,
-      "绝区零": 234493,
-      "崩坏3": 10056,
-      "未定事件簿": 172095,
-      "崩坏学园2": 7158
+      "绝区零": 234493
     },
     "event_types": ["check_in", "gift"]
   },
