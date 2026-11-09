@@ -24,6 +24,68 @@ log = logging.getLogger("codewatch")
 HEARTBEAT_SECONDS = 20 * 3600
 
 
+def _local_parts(now, offset_hours):
+    """把时间戳按固定时区换算成 (日期, 当天分钟数)。
+
+    用 gmtime + 偏移而不是 localtime：GitHub Actions 的 runner 是 UTC，
+    直接 localtime 会让「今天」和推送时段全部错 8 小时。
+    """
+    shifted = time.gmtime(now + offset_hours * 3600)
+    return time.strftime("%Y-%m-%d", shifted), shifted.tm_hour * 60 + shifted.tm_min
+
+
+def pending_slot(cfg, now, state):
+    """当前是否处于可推送时段？返回 (本地日期, 时段) / None。
+
+    固定推送时间就是为了躲开凌晨 —— 不在时段内时不推送、也不记录状态，
+    所以夜里发现的内容不会丢，会一直攒到下一个时段一起发。
+    关掉 push_schedule.enable 就退回「有变化立刻推」。
+    """
+    schedule = cfg.get("push_schedule") or {}
+    if not schedule.get("enable", True):
+        return "", "always"
+
+    offset = int(schedule.get("tz_offset", 8))
+    window = int(schedule.get("window_minutes", 60))
+    date, minutes = _local_parts(now, offset)
+
+    for slot in (schedule.get("slots") or []):
+        try:
+            hh, mm = str(slot).split(":")
+            start = int(hh) * 60 + int(mm)
+        except (ValueError, AttributeError):
+            continue
+        if not (start <= minutes < start + window):
+            continue
+        if state_mod.push_slot_pushed(state, date, slot):
+            continue
+        return date, str(slot)
+    return None
+
+
+def filter_excluded(posts, cfg):
+    """按排除名单丢掉不玩的游戏的内容。
+
+    只认明确识别出游戏的条目：识别不出游戏的（比如全站活动中心里
+    其他厂商的活动）一律保留，避免误伤。
+    """
+    excluded = {str(g).strip() for g in (cfg.get("exclude_games") or []) if str(g).strip()}
+    if not excluded:
+        return posts
+
+    kept, dropped = [], 0
+    for post in posts:
+        if post.game and str(post.game).strip() in excluded:
+            dropped += 1
+            log.debug("排除 %s：%s", post.game, (post.title or "")[:40])
+            continue
+        kept.append(post)
+
+    if dropped:
+        log.info("按排除名单丢弃 %d 条（%s）", dropped, "、".join(sorted(excluded)))
+    return kept
+
+
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="米家兑换码哨兵")
     parser.add_argument("--root", default=".", help="工程根目录（config.json 所在位置）")
@@ -135,10 +197,11 @@ def main(argv=None):
     state, first_run = state_mod.load(state_path)
     log.info("记录中已有 %d 个历史兑换码", len(state["codes"]))
 
-    posts = collect(cfg, now)
+    posts = filter_excluded(collect(cfg, now), cfg)
     log.info("共取得 %d 条待分析内容", len(posts))
 
-    today = time.strftime("%Y-%m-%d")
+    tz_offset = int((cfg.get("push_schedule") or {}).get("tz_offset", 8))
+    today, _ = _local_parts(now, tz_offset)
     novel = analyse(cfg, posts, dict(state["codes"]))
     daily_reminder = bool(cfg.get("taptap.daily_reminder", True))
     announced = collect_announce(posts, state)
@@ -177,8 +240,14 @@ def main(argv=None):
 
         title = _title(novel, announced, reminders)
         body = _render(novel, announced, reminders)
+        slot = pending_slot(cfg, now, state)
         if args.dry_run:
             log.info("dry-run：跳过推送。内容预览：\n%s", body)
+        elif slot is None:
+            # 不在时段内：不推送、不记录，内容保持「新」状态等下个时段
+            log.info("不在推送时段（%s %s），%d 个码 / %d 条活动 / %d 条签到提醒暂存",
+                     today, (cfg.get("push_schedule") or {}).get("slots"), len(novel),
+                     len(announced), len(reminders))
         else:
             try:
                 notifier.send(cfg, title, body)
@@ -189,6 +258,8 @@ def main(argv=None):
                     state_mod.remember_announced(state, post.post_id)
                 for post in reminders:
                     state_mod.remember_sign_reminder(state, post.sign_slug, today)
+                slot_date, slot_label = slot
+                state_mod.remember_push_slot(state, slot_date, slot_label)
             except Exception as exc:  # noqa: BLE001
                 log.error("推送失败，本轮不记录状态，下轮会重试：%s", exc)
                 novel, announced, reminders = [], [], []
@@ -202,6 +273,9 @@ def main(argv=None):
         dropped_sign = state_mod.prune_sign_reminders(state)
         if dropped_sign:
             log.debug("清理了 %d 条过期签到提醒记录", dropped_sign)
+        dropped_slots = state_mod.prune_push_slots(state)
+        if dropped_slots:
+            log.debug("清理了 %d 条过期推送时段记录", dropped_slots)
         if now - float(state.get("last_heartbeat", 0)) > HEARTBEAT_SECONDS:
             state["last_heartbeat"] = int(now)
             log.debug("更新心跳时间，保持 GitHub Actions 定时任务不被回收")
