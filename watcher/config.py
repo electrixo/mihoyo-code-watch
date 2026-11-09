@@ -12,7 +12,20 @@ from pathlib import Path
 log = logging.getLogger("codewatch.config")
 
 DEFAULTS = {
-    "games": ["原神", "崩坏：星穹铁道", "绝区零"],
+    # 不玩的游戏，命中就丢掉（按游戏名精确匹配）。
+    # 识别不出游戏的内容不受影响 —— 其他厂商的活动照常推送。
+    "exclude_games": ["崩坏3", "未定事件簿", "崩坏学园2"],
+    # 推送时段：只在下面几个时间点附近发推送，其余时间只扫描不发。
+    # 目的：避免凌晨推送（夜里发现的内容不写状态，攒到下一个时段一起发）。
+    # 时区按 tz_offset 换算，8 = 北京时间，不受 runner 的 UTC 影响。
+    "push_schedule": {
+        "enable": True,
+        "tz_offset": 8,
+        "slots": ["09:00", "20:00"],
+        # 时段容差：GitHub Actions 的 cron 会延迟 5-15 分钟，
+        # 而且同一时段有 :07 / :37 两轮可以重试，60 分钟足够兜住。
+        "window_minutes": 60,
+    },
     "miyoushe": {
         "enable": True,
         "keywords": ["兑换码", "前瞻直播兑换码", "礼包码", "兑换中心"],
@@ -44,13 +57,11 @@ DEFAULTS = {
         # 活动中心 /events 里一条都没有（实测绝区零的「签到领好礼」就不在）。
         # 想加别的厂商的游戏，照格式填「游戏名: app_id」即可
         # （app_id 从 https://www.taptap.cn/app/<数字> 的地址里取）。
+        # 只扫在玩的这三款；不玩的游戏连请求都不发（exclude_games 兜底剩下的来源）。
         "apps": {
             "原神": 168332,
             "崩坏：星穹铁道": 224267,
             "绝区零": 234493,
-            "崩坏3": 10056,
-            "未定事件簿": 172095,
-            "崩坏学园2": 7158,
         },
         # 只推这几类活动：check_in 签到、gift 礼包（点击即领）。
         # 也可加 activity(创作征集) / lottery(抽奖) / in_app_event(游戏内活动)，
