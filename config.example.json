@@ -25,7 +25,7 @@
 
   "taptap": {
     "enable": true,
-    "max_pages": 24,
+    "max_pages": 8,
     "keywords": ["签到", "礼包", "兑换码", "CDK", "激活码", "兑换"],
     "with_detail": true,
     "daily_reminder": true,
