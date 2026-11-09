@@ -23,6 +23,9 @@ SCHEMA = {
     # 累计签到型活动需要天天提醒（断一天就白费），但一天只能提醒一次。
     # 只存最后一次提醒的日期，天然不会膨胀。
     "sign_reminders": {},
+    # 推送时段去重：{"YYYY-MM-DD": ["09:00", "20:00"]}。
+    # 同一个时段只推一次，避免 :07 / :37 两轮 cron 在同一时段重复发。
+    "push_slots": {},
     "last_heartbeat": 0,
 }
 
@@ -104,6 +107,25 @@ def remember_sign_reminder(state, slug, today):
         state.setdefault("sign_reminders", {})[slug] = today
 
 
+def push_slot_pushed(state, date, slot):
+    """这个时段的推送是不是已经发过了？
+
+    cron 每 30 分钟跑一轮，同一个时段（比如 09:00-10:00）会跑到两三次，
+    用它保证一个时段只真正推送一次。
+    """
+    if not date or not slot:
+        return False
+    return slot in ((state.get("push_slots") or {}).get(date) or [])
+
+
+def remember_push_slot(state, date, slot):
+    if not date or not slot:
+        return
+    slots = state.setdefault("push_slots", {}).setdefault(date, [])
+    if slot not in slots:
+        slots.append(slot)
+
+
 def prune_announced(state, keep_days=180):
     """公告记录会一直涨，定期清掉老条目，避免状态文件无限膨胀。"""
     cutoff = int(time.time()) - keep_days * 86400
@@ -125,4 +147,14 @@ def prune_sign_reminders(state, keep_days=180):
            if isinstance(day, str) and day < cutoff]
     for key in old:
         del reminders[key]
+    return len(old)
+
+
+def prune_push_slots(state, keep_days=7):
+    """时段记录只用于当天去重，留 7 天足够排查，之后清掉。"""
+    cutoff = time.strftime("%Y-%m-%d", time.localtime(time.time() - keep_days * 86400))
+    slots = state.get("push_slots") or {}
+    old = [k for k in slots if isinstance(k, str) and k < cutoff]
+    for key in old:
+        del slots[key]
     return len(old)
