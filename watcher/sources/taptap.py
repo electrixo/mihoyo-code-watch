@@ -321,14 +321,23 @@ class TapTapEvents(Source):
 
     def fetch(self):
         events, seen_ids = [], set()
+        fail_streak = 0
 
         for page in range(1, self.max_pages + 1):
             url = EVENTS_PAGE if page == 1 else f"{EVENTS_PAGE}?page={page}"
             try:
                 html = _grab(url)
             except HttpError as exc:
-                log.warning("TapTap 活动第 %d 页抓取失败：%s", page, exc)
-                break
+                # 单页失败（实测偶发 HTTP 405）不该丢掉后面所有页，
+                # 跳过继续翻；连续 3 页都失败才说明是真的拿不到数据。
+                fail_streak += 1
+                log.warning("TapTap 活动第 %d 页抓取失败（连续 %d 次）：%s",
+                            page, fail_streak, exc)
+                if fail_streak >= 3:
+                    log.warning("TapTap 连续 %d 页失败，停止翻页", fail_streak)
+                    break
+                continue
+            fail_streak = 0
             try:
                 slots = _slots(html)
             except HttpError as exc:
