@@ -35,20 +35,30 @@ def _local_parts(now, offset_hours):
 
 
 def _slot_window(cfg, now):
-    """返回 (本地日期, 当前所处时段标签)；不在任何时段内时时段为 None。"""
+    """返回 (本地日期, 当前所处时段标签)；首个时段之前（夜间）为 None。
+
+    每个时段从它的时间点开始，一直有效到下一个时段开始，最后一个到当天结束。
+    实测 GitHub Actions 的 cron 实际每 2-4 小时才跑一次（大量 scheduled run
+    被直接丢弃），所以不能用「60 分钟窄窗口」——那会整天漏推。放宽后，
+    9 点以后任意一轮运行都能把 9 点的内容补推出去，夜间仍然静默。
+    """
     schedule = cfg.get("push_schedule") or {}
     offset = int(schedule.get("tz_offset", 8))
-    window = int(schedule.get("window_minutes", 60))
     date, minutes = _local_parts(now, offset)
 
+    starts = []
     for slot in (schedule.get("slots") or []):
         try:
             hh, mm = str(slot).split(":")
-            start = int(hh) * 60 + int(mm)
+            starts.append((int(hh) * 60 + int(mm), str(slot)))
         except (ValueError, AttributeError):
             continue
-        if start <= minutes < start + window:
-            return date, str(slot)
+    starts.sort()
+
+    for i, (start, label) in enumerate(starts):
+        end = starts[i + 1][0] if i + 1 < len(starts) else 24 * 60
+        if start <= minutes < end:
+            return date, label
     return date, None
 
 
@@ -81,7 +91,7 @@ def slot_status(cfg, now, slot):
     slots = "、".join(str(s) for s in (schedule.get("slots") or []))
     _, current = _slot_window(cfg, now)
     if current is None:
-        return f"非推送时段（只在 {slots} 推），本轮不推送"
+        return f"夜间静默（{slots} 之前不推），本轮不推送"
     if slot is None:
         return f"{current} 时段今天已推送过，本轮不重复推送"
     return f"{current} 时段，本轮可推送"
@@ -270,10 +280,9 @@ def main(argv=None):
         if args.dry_run:
             log.info("dry-run：跳过推送。内容预览：\n%s", body)
         elif slot is None:
-            # 不在时段内：不推送、不记录，内容保持「新」状态等下个时段
-            log.info("不在推送时段（%s %s），%d 个码 / %d 条活动 / %d 条签到提醒暂存",
-                     today, (cfg.get("push_schedule") or {}).get("slots"), len(novel),
-                     len(announced), len(reminders))
+            # 夜间静默或本时段已推过：不推送、不记录，内容保持「新」状态
+            log.info("本轮不推送（%s），%d 个码 / %d 条活动 / %d 条签到提醒暂存",
+                     slot_status(cfg, now, slot), len(novel), len(announced), len(reminders))
         else:
             try:
                 notifier.send(cfg, title, body)
