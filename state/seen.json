@@ -16,7 +16,8 @@
     "taptap-app-00316734966c4a00": 1791467760,
     "taptap-app-6b9d26604818e6a9": 1793987775,
     "taptap-app-a46e935aefbb1429": 1789367651,
-    "taptap-app-c49537952096974d": 1793987775
+    "taptap-app-c49537952096974d": 1793987775,
+    "taptap-app-fe8e4c893d5fde8e": 1794382989
   },
   "codes": {
     "2BJ64QRZ7RT8": {
@@ -53,6 +54,14 @@
     },
     "7S4AD2X35NE3": {
       "first_seen": 1789906335,
+      "game": "崩坏：星穹铁道",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
+    "AEONAHA": {
+      "first_seen": 1794382989,
       "game": "崩坏：星穹铁道",
       "region": "国际服",
       "score": 10,
@@ -560,15 +569,19 @@
   "push_slots": {
     "2026-11-10": [
       "09:00"
+    ],
+    "2026-11-11": [
+      "09:00"
     ]
   },
   "sign_reminders": {
     "3jbyw7p8": "2026-10-30",
+    "3xvbtdni": "2026-11-11",
     "mirb9xah": "2026-11-07",
     "riuf6rc3": "2026-09-18",
     "rk0lavd9": "2026-10-07",
     "tp2bliv3": "2026-10-14",
     "u0gaffdj": "2026-10-02",
-    "wtzz5vyk": "2026-11-10"
+    "wtzz5vyk": "2026-11-11"
   }
 }
