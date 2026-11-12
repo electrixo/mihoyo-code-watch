@@ -324,6 +324,14 @@
       "source": "hoyo-codes(国际服)",
       "url": "https://hoyo-codes.seria.moe"
     },
+    "NS4DU8AAGXBP": {
+      "first_seen": 1794486899,
+      "game": "崩坏：星穹铁道",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
     "OKTCV81F9H8D": {
       "first_seen": 1791977880,
       "game": "原神",
@@ -565,7 +573,7 @@
       "url": "https://hoyo-codes.seria.moe"
     }
   },
-  "last_heartbeat": 1794413117,
+  "last_heartbeat": 1794486878,
   "push_slots": {
     "2026-11-10": [
       "09:00"
@@ -574,7 +582,8 @@
       "09:00"
     ],
     "2026-11-12": [
-      "09:00"
+      "09:00",
+      "20:00"
     ]
   },
   "sign_reminders": {
