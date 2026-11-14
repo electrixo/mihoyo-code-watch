@@ -428,6 +428,14 @@
       "source": "米游社搜索(兑换码)",
       "url": "https://www.miyoushe.com/ys/article/78588482"
     },
+    "QYJWFB784MFL": {
+      "first_seen": 1794625681,
+      "game": "原神",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
     "REKVIEM": {
       "first_seen": 1789367651,
       "game": "原神",
@@ -587,11 +595,14 @@
     ],
     "2026-11-13": [
       "09:00"
+    ],
+    "2026-11-14": [
+      "09:00"
     ]
   },
   "sign_reminders": {
     "3jbyw7p8": "2026-10-30",
-    "3xvbtdni": "2026-11-13",
+    "3xvbtdni": "2026-11-14",
     "mirb9xah": "2026-11-07",
     "riuf6rc3": "2026-09-18",
     "rk0lavd9": "2026-10-07",
