@@ -296,6 +296,10 @@ class TapTapEvents(Source):
     def __init__(self, cfg, now=None):
         self.keywords = [str(k) for k in cfg.get("taptap.keywords", DEFAULT_KEYWORDS)]
         self.max_pages = max(1, int(cfg.get("taptap.max_pages", 3)))
+        # 全站活动中心 /events 是噪音最大的那条链路（关键词命中不等于和
+        # 你玩的游戏相关，别家游戏的签到/礼包也会被推）。默认关闭。
+        # 关掉它不影响游戏活动页 —— 三款游戏的签到/礼包提醒仍照常。
+        self.centre_enable = bool(cfg.get("taptap.centre_enable", True))
         self.with_detail = bool(cfg.get("taptap.with_detail", True))
         # 可选：填了 TapTap 的登录 Cookie，就能读出「今天签没签」「累计几天」。
         # 不填也能用 —— 只是推送变成纯提醒（不知道你签没签）。
@@ -321,6 +325,39 @@ class TapTapEvents(Source):
 
     def fetch(self):
         events, seen_ids = [], set()
+
+        if self.centre_enable:
+            self._fetch_centre(events, seen_ids)
+        else:
+            log.info("TapTap 活动中心已关闭（taptap.centre_enable=false），只扫游戏活动页")
+
+        centre_count = len(events)
+
+        # ---- 游戏专属活动：活动中心的盲区 ----
+        # 米哈游的签到/礼包活动一条都不在 /events 里，只挂在游戏主页的
+        # /app/{id}/game-event。不做这一步就会整个漏掉（实测绝区零有
+        # 一个 9.3 万人参加的签到活动，全站活动中心扫描完全看不到）。
+        seen_pid = set()
+        for app_name, aid in self.apps.items():
+            for ev in _game_events(aid):
+                kind = (ev.get("type") or "").lower()
+                if kind not in self.event_types:
+                    continue
+                pid = _event_pid(aid, ev)
+                if pid in seen_pid:
+                    continue
+                seen_pid.add(pid)
+                post = self._to_post_game_event(app_name, aid, ev, pid)
+                if post:
+                    events.append(post)
+            time.sleep(0.25)
+
+        log.info("TapTap 共命中 %d 条（活动中心 %d + 游戏专属 %d，覆盖 %d 款游戏）",
+                 len(events), centre_count, len(events) - centre_count, len(self.apps))
+        return events
+
+    def _fetch_centre(self, events, seen_ids):
+        """扫全站活动中心 /events（噪音源，可用 taptap.centre_enable 关掉）。"""
         fail_streak = 0
 
         for page in range(1, self.max_pages + 1):
@@ -360,31 +397,6 @@ class TapTapEvents(Source):
             if got == 0:
                 break
             time.sleep(0.3)
-
-        centre_count = len(events)
-
-        # ---- 游戏专属活动：活动中心的盲区 ----
-        # 米哈游的签到/礼包活动一条都不在 /events 里，只挂在游戏主页的
-        # /app/{id}/game-event。不做这一步就会整个漏掉（实测绝区零有
-        # 一个 9.3 万人参加的签到活动，全站活动中心扫描完全看不到）。
-        seen_pid = set()
-        for app_name, aid in self.apps.items():
-            for ev in _game_events(aid):
-                kind = (ev.get("type") or "").lower()
-                if kind not in self.event_types:
-                    continue
-                pid = _event_pid(aid, ev)
-                if pid in seen_pid:
-                    continue
-                seen_pid.add(pid)
-                post = self._to_post_game_event(app_name, aid, ev, pid)
-                if post:
-                    events.append(post)
-            time.sleep(0.25)
-
-        log.info("TapTap 共命中 %d 条（活动中心 %d + 游戏专属 %d，覆盖 %d 款游戏）",
-                 len(events), centre_count, len(events) - centre_count, len(self.apps))
-        return events
 
     def _to_post_game_event(self, app_name, aid, ev, pid):
         """把游戏主页活动页里的一条活动转成 Post。
