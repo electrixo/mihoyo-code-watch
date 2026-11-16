@@ -7,7 +7,7 @@
   "push_schedule": {
     "enable": true,
     "tz_offset": 8,
-    "slots": ["09:00", "20:00"]
+    "slots": ["09:00", "22:00"]
   },
 
   "miyoushe": {
@@ -24,6 +24,7 @@
 
   "taptap": {
     "enable": true,
+    "centre_enable": false,
     "max_pages": 8,
     "keywords": ["签到", "礼包", "兑换码", "CDK", "激活码", "兑换"],
     "with_detail": true,
