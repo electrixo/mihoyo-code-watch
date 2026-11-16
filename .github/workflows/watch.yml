@@ -2,8 +2,15 @@ name: 兑换码哨兵
 
 on:
   schedule:
-    # GitHub Actions 的 cron 用 UTC，且有 5-15 分钟排队延迟
-    - cron: "7,37 * * * *"
+    # GitHub Actions 的 cron 用 UTC（北京 = UTC+8），且会延迟甚至丢弃调度。
+    # 实测：配 48 次/天时，一天真正只跑了 4 次左右。所以每个时段多给几轮兜底——
+    # 同一时段只会推一次（push_slots 去重），多跑几轮只花分钟数，不会重复推送。
+    #
+    # 每天 09:00 时段（北京）：UTC 01:07/01:37（09:07/09:37）、04:07/04:37（12:07/12:37）
+    - cron: "7,37 1,4 * * *"
+    # 周三/五/六 晚间时段（北京 22:00-23:00）：UTC 14:07/14:37（22:07/22:37）
+    # 前瞻直播的码通常在直播尾声才公布，太早跑会漏；22 点后跑能一次抓齐。
+    - cron: "7,37 14 * * 3,5,6"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -21,7 +28,8 @@ concurrency:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 随机延迟最多 10 分钟，加上单轮耗时，留足余量
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +37,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: 随机延迟（避免每次都在同一分钟发起请求）
+        # cron 只能配固定分钟，随机性靠入队后 sleep 实现：0-10 分钟。
+        # 手动触发不延迟，方便调试。改范围就改 % 600（秒）。
+        if: github.event_name == 'schedule'
+        run: sleep $((RANDOM % 600))
 
       - name: 跑一轮监控
         env:
