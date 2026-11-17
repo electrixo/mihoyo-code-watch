@@ -6,8 +6,10 @@ on:
     # 实测：配 48 次/天时，一天真正只跑了 4 次左右。所以每个时段多给几轮兜底——
     # 同一时段只会推一次（push_slots 去重），多跑几轮只花分钟数，不会重复推送。
     #
-    # 每天 09:00 时段（北京）：UTC 01:07/01:37（09:07/09:37）、04:07/04:37（12:07/12:37）
-    - cron: "7,37 1,4 * * *"
+    # 每天 09:00 时段（北京 09:00-20:00）：白天每 30 分钟打一个点。
+    # 实测少打点时会被整轮丢弃（11-17 那天的 4 个点全军覆没），
+    # 所以改成密集打点，靠 push_slots 去重保证「同一时段只推一次」。
+    - cron: "7,37 1-11 * * *"
     # 周三/五/六 晚间时段（北京 22:00-23:00）：UTC 14:07/14:37（22:07/22:37）
     # 前瞻直播的码通常在直播尾声才公布，太早跑会漏；22 点后跑能一次抓齐。
     - cron: "7,37 14 * * 3,5,6"
@@ -39,10 +41,11 @@ jobs:
           python-version: "3.12"
 
       - name: 随机延迟（避免每次都在同一分钟发起请求）
-        # cron 只能配固定分钟，随机性靠入队后 sleep 实现：0-10 分钟。
-        # 手动触发不延迟，方便调试。改范围就改 % 600（秒）。
+        # cron 只能配固定分钟，随机性靠入队后 sleep 实现。
+        # 白天打点变密后把范围收到 0-2 分钟，控制私有仓库的计费分钟数。
+        # 手动触发不延迟，方便调试。改范围就改 % 120（秒）。
         if: github.event_name == 'schedule'
-        run: sleep $((RANDOM % 600))
+        run: sleep $((RANDOM % 120))
 
       - name: 跑一轮监控
         env:
@@ -58,12 +61,31 @@ jobs:
           TAPTAP_COOKIE: ${{ secrets.TAPTAP_COOKIE }}
           # 可选：微博源默认关闭，填了 Cookie 才会启用
           WEIBO_COOKIE: ${{ secrets.WEIBO_COOKIE }}
+        # pipefail：tee 不能吞掉 run.py 的退出码（推送失败 → 1，配置错误 → 2），
+        # 否则 Actions 永远不会变红。
         run: |
+          set -o pipefail
           if [ "${{ inputs.dry_run }}" = "true" ]; then
-            python run.py --dry-run --verbose
+            python run.py --dry-run --verbose 2>&1 | tee codewatch.log
           else
-            python run.py
+            python run.py 2>&1 | tee codewatch.log
           fi
+
+      - name: 写入运行摘要
+        # 失败时也要写：红色 job 里同样能直接看到卡在哪个源/哪个通道
+        if: always()
+        run: |
+          {
+            echo "## 兑换码哨兵运行摘要"
+            echo ""
+            if [ -f codewatch.log ]; then
+              echo '```'
+              tail -n 80 codewatch.log
+              echo '```'
+            else
+              echo "本轮没有产生日志（run.py 未启动）"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: 提交去重状态
         if: always()
