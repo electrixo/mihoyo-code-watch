@@ -412,6 +412,14 @@
       "source": "hoyo-codes(国际服)",
       "url": "https://hoyo-codes.seria.moe"
     },
+    "POYMANSXF877": {
+      "first_seen": 1795163283,
+      "game": "原神",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
     "PRIMADONNA": {
       "first_seen": 1789367651,
       "game": "原神",
@@ -589,12 +597,8 @@
       "url": "https://hoyo-codes.seria.moe"
     }
   },
-  "last_heartbeat": 1795077679,
+  "last_heartbeat": 1795163269,
   "push_slots": {
-    "2026-11-12": [
-      "09:00",
-      "20:00"
-    ],
     "2026-11-13": [
       "09:00"
     ],
@@ -615,11 +619,14 @@
     ],
     "2026-11-19": [
       "09:00"
+    ],
+    "2026-11-20": [
+      "09:00"
     ]
   },
   "sign_reminders": {
     "3jbyw7p8": "2026-10-30",
-    "3xvbtdni": "2026-11-19",
+    "3xvbtdni": "2026-11-20",
     "mirb9xah": "2026-11-07",
     "riuf6rc3": "2026-09-18",
     "rk0lavd9": "2026-10-07",
