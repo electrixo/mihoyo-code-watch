@@ -204,6 +204,14 @@
       "source": "hoyo-codes(国际服)",
       "url": "https://hoyo-codes.seria.moe"
     },
+    "HOLLOWRUN34": {
+      "first_seen": 1795248881,
+      "game": "绝区零",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
     "HOUROFRUIN": {
       "first_seen": 1792774454,
       "game": "原神",
@@ -222,6 +230,14 @@
     },
     "INKSHIFT33": {
       "first_seen": 1792910780,
+      "game": "绝区零",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
+    "INKSHIFT34": {
+      "first_seen": 1795248881,
       "game": "绝区零",
       "region": "国际服",
       "score": 10,
@@ -270,6 +286,14 @@
     },
     "LEVELUP33": {
       "first_seen": 1792910780,
+      "game": "绝区零",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
+    "LEVELUP34": {
+      "first_seen": 1795248881,
       "game": "绝区零",
       "region": "国际服",
       "score": 10,
@@ -484,6 +508,14 @@
       "source": "hoyo-codes(国际服)",
       "url": "https://hoyo-codes.seria.moe"
     },
+    "SUNCHASER": {
+      "first_seen": 1795248881,
+      "game": "绝区零",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
     "SUNSWEPTROBIN": {
       "first_seen": 1789367651,
       "game": "崩坏：星穹铁道",
@@ -515,6 +547,14 @@
       "score": 10,
       "source": "hoyo-codes(国际服)",
       "url": "https://hoyo-codes.seria.moe"
+    },
+    "WANZHOU1202": {
+      "first_seen": 1795248881,
+      "game": "绝区零",
+      "region": "",
+      "score": 5,
+      "source": "米游社搜索(兑换码)",
+      "url": "https://www.miyoushe.com/ys/article/79682381"
     },
     "WAVEFLAIRSTYLE": {
       "first_seen": 1789367651,
@@ -572,8 +612,24 @@
       "source": "米游社搜索(前瞻直播兑换码)",
       "url": "https://www.miyoushe.com/ys/article/78285446"
     },
+    "ZZZ34SUNBRINGER": {
+      "first_seen": 1795248881,
+      "game": "绝区零",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
     "ZZZGRIND32": {
       "first_seen": 1789367651,
+      "game": "绝区零",
+      "region": "国际服",
+      "score": 10,
+      "source": "hoyo-codes(国际服)",
+      "url": "https://hoyo-codes.seria.moe"
+    },
+    "ZZZHSRCOLLAB": {
+      "first_seen": 1795248881,
       "game": "绝区零",
       "region": "国际服",
       "score": 10,
@@ -597,11 +653,8 @@
       "url": "https://hoyo-codes.seria.moe"
     }
   },
-  "last_heartbeat": 1795163269,
+  "last_heartbeat": 1795248867,
   "push_slots": {
-    "2026-11-13": [
-      "09:00"
-    ],
     "2026-11-14": [
       "09:00"
     ],
@@ -622,11 +675,14 @@
     ],
     "2026-11-20": [
       "09:00"
+    ],
+    "2026-11-21": [
+      "09:00"
     ]
   },
   "sign_reminders": {
     "3jbyw7p8": "2026-10-30",
-    "3xvbtdni": "2026-11-20",
+    "3xvbtdni": "2026-11-21",
     "mirb9xah": "2026-11-07",
     "riuf6rc3": "2026-09-18",
     "rk0lavd9": "2026-10-07",
